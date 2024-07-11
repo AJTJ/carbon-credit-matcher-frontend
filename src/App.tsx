@@ -17,6 +17,16 @@ const AppContainer = styled.div`
   padding: 20px;
 `;
 
+const DefaultDataButton = styled.button`
+  padding: 10px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 10px;
+`;
+
 const Form = styled.form`
   display: flex;
   flex-direction: column;
@@ -159,7 +169,8 @@ function App() {
     e.preventDefault();
     try {
       const response = await axios.post<MatchResponse>(
-        "http://your-ec2-ip:8000/api/v1/match_opportunities",
+        // "http://your-ec2-ip:8000/api/v1/match_opportunities",
+        "http://localhost:8000/api/v1/match_opportunities",
         formData
       );
       setResults(response.data);
@@ -168,9 +179,32 @@ function App() {
     }
   };
 
+  const fillDefaultData = () => {
+    setFormData({
+      company_name: "EcoTech Solutions",
+      industry: "Renewable Energy",
+      description:
+        "EcoTech Solutions is a leading innovator in renewable energy technologies, focusing on solar and wind power solutions for urban environments.",
+      annual_emissions: 50000,
+      carbon_reduction_goal: 30,
+      preferred_project_types: "Solar Energy, Wind Energy, Energy Efficiency",
+      preferred_locations: "United States, Europe",
+      sdgs: "7, 9, 11, 13",
+      environmental_focus:
+        "Reducing carbon emissions and promoting clean energy adoption in cities",
+      social_focus:
+        "Creating green jobs and improving air quality in urban areas",
+      technology_interests:
+        "Photovoltaic cells, Wind turbines, Smart grid technologies",
+    });
+  };
+
   return (
     <AppContainer>
       <h1>Carbon Credit Matcher</h1>
+      <DefaultDataButton onClick={fillDefaultData}>
+        Fill with Example Data
+      </DefaultDataButton>
       <Form onSubmit={handleSubmit}>
         {Object.entries(formData).map(([key, value]) => (
           <Input

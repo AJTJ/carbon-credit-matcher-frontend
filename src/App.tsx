@@ -169,8 +169,8 @@ function App() {
     e.preventDefault();
     try {
       const response = await axios.post<MatchResponse>(
-        // "http://your-ec2-ip:8000/api/v1/match_opportunities",
-        "http://localhost:8000/api/v1/match_opportunities",
+        "http://18.222.124.140:8000/api/v1/match_opportunities",
+        // "http://localhost:8000/api/v1/match_opportunities",
         formData
       );
       setResults(response.data);

@@ -182,7 +182,7 @@ function App() {
   const fillDefaultData = () => {
     setFormData({
       company_name: "EcoTech Solutions",
-      industry: "Renewable Energy",
+      industry: "Renewable Energies",
       description:
         "EcoTech Solutions is a leading innovator in renewable energy technologies, focusing on solar and wind power solutions for urban environments.",
       annual_emissions: 50000,

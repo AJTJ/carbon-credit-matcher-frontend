@@ -137,6 +137,8 @@ interface MatchResponse {
   };
 }
 
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
+
 function App() {
   const [formData, setFormData] = useState<ESGProfile>({
     company_name: "",
@@ -164,13 +166,11 @@ function App() {
           : value,
     }));
   };
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       const response = await axios.post<MatchResponse>(
-        "http://18.222.124.140:8000/api/v1/match_opportunities",
-        // "http://localhost:8000/api/v1/match_opportunities",
+        `${API_URL}/api/v1/match_opportunities`,
         formData
       );
       setResults(response.data);

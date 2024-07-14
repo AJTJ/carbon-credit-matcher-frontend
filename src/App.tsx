@@ -201,7 +201,13 @@ function App() {
 
   return (
     <AppContainer>
-      <h1>Carbon Credit Matcher</h1>
+      <h1>Carbon Credit Matcher!</h1>
+      <h2>
+        Note: This is a POC of using AI to match an ESG profile (inputed through
+        fields by the user) with a collection of carbon credit opportunities.
+        The collection is a naive collection of three opportunities taken from a
+        database of projects.
+      </h2>
       <DefaultDataButton onClick={fillDefaultData}>
         Fill with Example Data
       </DefaultDataButton>

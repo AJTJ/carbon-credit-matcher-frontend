@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import axios from "axios";
 import {
@@ -9,12 +9,45 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  LabelList,
 } from "recharts";
+import MatchExplanation from "./ExplanationContainer";
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="custom-tooltip">
+        <p className="label">{`${payload[0].payload.opportunity.name}`}</p>
+        <p className="intro">{`${payload[0].name} : ${payload[0].value}`}</p>
+      </div>
+    );
+  }
+  return null;
+};
 
 const AppContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+`;
+
+const TabContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+`;
+
+const TabButton = styled.button<{ active: boolean }>`
+  padding: 10px 20px;
+  border: none;
+  background-color: ${(props) => (props.active ? "#007bff" : "#f0f0f0")};
+  color: ${(props) => (props.active ? "white" : "black")};
+  cursor: pointer;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: ${(props) => (props.active ? "#0056b3" : "#e0e0e0")};
+  }
 `;
 
 const DefaultDataButton = styled.button`
@@ -63,6 +96,7 @@ const SummaryContainer = styled.div`
 
 const MatchesContainer = styled.div`
   display: flex;
+  flex-direction: column;
   flex-wrap: wrap;
   gap: 20px;
 `;
@@ -88,18 +122,32 @@ const ListItem = styled.li`
   margin-bottom: 5px;
 `;
 
+// interface ESGProfile {
+//   company_name: string;
+//   industry: string;
+//   description: string;
+//   annual_emissions: number;
+//   carbon_reduction_goal: number;
+//   preferred_project_types: string;
+//   preferred_locations: string;
+//   sdgs: string;
+//   environmental_focus: string;
+//   social_focus: string;
+//   technology_interests: string;
+// }
+
 interface ESGProfile {
   company_name: string;
   industry: string;
   description: string;
   annual_emissions: number;
   carbon_reduction_goal: number;
-  preferred_project_types: string;
-  preferred_locations: string;
-  sdgs: string;
+  preferred_project_types: string[];
+  preferred_locations: string[];
+  sdgs: number[];
   environmental_focus: string;
   social_focus: string;
-  technology_interests: string;
+  technology_interests: string[];
 }
 
 interface CarbonCreditOpportunity {
@@ -122,6 +170,7 @@ interface CarbonCreditOpportunity {
 interface MatchResult {
   opportunity: CarbonCreditOpportunity;
   match_explanation: string;
+  short_summary: string;
   match_score: number;
 }
 
@@ -137,7 +186,61 @@ interface MatchResponse {
   };
 }
 
+const SpinnerOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
+const SpinnerText = styled.p`
+  color: white;
+  margin-top: 10px;
+`;
+
+const Spinner = styled.div`
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
+
+const formatExplanation = (explanation: string): JSX.Element[] => {
+  const sections = explanation.split(/\d+\.\s+\*\*/);
+  return sections
+    .map((section, index) => {
+      if (index === 0) return null; // Skip the introductory text
+      const [title, content] = section.split("**: ");
+      return (
+        <div key={index}>
+          <h4>{title}</h4>
+          <p>{content}</p>
+        </div>
+      );
+    })
+    .filter((element): element is JSX.Element => element !== null);
+};
 
 function App() {
   const [formData, setFormData] = useState<ESGProfile>({
@@ -146,15 +249,32 @@ function App() {
     description: "",
     annual_emissions: 0,
     carbon_reduction_goal: 0,
-    preferred_project_types: "",
-    preferred_locations: "",
-    sdgs: "",
+    preferred_project_types: [],
+    preferred_locations: [],
+    sdgs: [],
     environmental_focus: "",
     social_focus: "",
-    technology_interests: "",
+    technology_interests: [],
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [chartMode, setChartMode] = useState("score");
+  const [activeTab, setActiveTab] = useState(0);
 
   const [results, setResults] = useState<MatchResponse | null>(null);
+
+  useEffect(() => {
+    if (results) {
+      console.log("Received results:", results);
+      results.matches.forEach((match, index) => {
+        console.log(`Match ${index + 1}:`, {
+          name: match.opportunity.name,
+          match_explanation: match.match_explanation,
+          short_summary: match.short_summary,
+          match_score: match.match_score,
+        });
+      });
+    }
+  }, [results]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -168,6 +288,7 @@ function App() {
   };
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       const response = await axios.post<MatchResponse>(
         `${API_URL}/api/v1/match_opportunities`,
@@ -176,6 +297,8 @@ function App() {
       setResults(response.data);
     } catch (error) {
       console.error("Error:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -187,20 +310,39 @@ function App() {
         "EcoTech Solutions is a leading innovator in renewable energy technologies, focusing on solar and wind power solutions for urban environments.",
       annual_emissions: 50000,
       carbon_reduction_goal: 30,
-      preferred_project_types: "Solar Energy, Wind Energy, Energy Efficiency",
-      preferred_locations: "United States, Europe",
-      sdgs: "7, 9, 11, 13",
+      preferred_project_types: [
+        "Solar Energy",
+        "Wind Energy",
+        "Energy Efficiency",
+      ],
+      preferred_locations: ["United States", "Europe"],
+      sdgs: [7, 9, 11, 13],
       environmental_focus:
         "Reducing carbon emissions and promoting clean energy adoption in cities",
       social_focus:
         "Creating green jobs and improving air quality in urban areas",
-      technology_interests:
-        "Photovoltaic cells, Wind turbines, Smart grid technologies",
+      technology_interests: [
+        "Photovoltaic cells",
+        "Wind turbines",
+        "Smart grid technologies",
+      ],
     });
   };
 
+  const chartData = (results: MatchResponse) =>
+    results.matches.map((match) => ({
+      ...match,
+      match_score: match.match_score * 100,
+    }));
+
   return (
     <AppContainer>
+      {isLoading && (
+        <SpinnerOverlay>
+          <Spinner />
+          <SpinnerText>This may take a few minutes...</SpinnerText>
+        </SpinnerOverlay>
+      )}
       <h1>Carbon Credit Matcher</h1>
       <h4>
         Note: This is a POC of using AI to match an ESG profile (inputed through
@@ -232,6 +374,25 @@ function App() {
       {results && (
         <ResultsContainer>
           <SummaryContainer>
+            <h3>Match Summary</h3>
+            <p>
+              These are the best 3 matches out of numerous opportunities in our
+              database.
+            </p>
+            <p>
+              Average Match Score:{" "}
+              {(results.summary.average_score * 100).toFixed(2)}%
+            </p>
+            <p>
+              Best Match: {results.matches[0].opportunity.name} with{" "}
+              {(results.summary.best_score * 100).toFixed(2)}%
+            </p>
+            <p>
+              Total Potential CO2 Reduction:{" "}
+              {results.summary.total_co2_reduction.toFixed(2)} tons/year
+            </p>
+          </SummaryContainer>
+          {/* <SummaryContainer>
             <h2>Summary</h2>
             <p>Average Score: {results.summary.average_score.toFixed(2)}</p>
             <p>Median Score: {results.summary.median_score.toFixed(2)}</p>
@@ -245,86 +406,146 @@ function App() {
               {results.summary.total_co2_reduction.toFixed(2)} tons/year
             </p>
             <p>Number of Matches: {results.summary.number_of_matches}</p>
-          </SummaryContainer>
+          </SummaryContainer> */}
 
+          <div>
+            <button onClick={() => setChartMode("score")}>
+              Show Match Scores
+            </button>
+            <button onClick={() => setChartMode("reduction")}>
+              Show CO2 Reduction
+            </button>
+          </div>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={results.matches}>
+            <BarChart data={chartData(results)}>
               <XAxis dataKey="opportunity.name" />
-              <YAxis />
-              <Tooltip />
+              {chartMode === "score" ? (
+                <Bar
+                  dataKey="match_score"
+                  fill="#8884d8"
+                  name="Match Score (%)"
+                  yAxisId="score"
+                >
+                  <LabelList dataKey="opportunity.name" position="top" />
+                </Bar>
+              ) : (
+                <Bar
+                  dataKey="opportunity.annual_co2_reduction"
+                  fill="#82ca9d"
+                  name="Annual CO2 Reduction (tons)"
+                  yAxisId="reduction"
+                >
+                  <LabelList dataKey="opportunity.name" position="top" />
+                </Bar>
+              )}
+              <Tooltip content={<CustomTooltip />} />
               <Legend />
-              <Bar dataKey="match_score" fill="#8884d8" name="Match Score" />
-              <Bar
-                dataKey="opportunity.annual_co2_reduction"
-                fill="#82ca9d"
-                name="Annual CO2 Reduction"
-              />
+              <YAxis yAxisId="score" orientation="left" domain={[0, 100]} />
+              <YAxis yAxisId="reduction" orientation="right" />
             </BarChart>
           </ResponsiveContainer>
 
           <MatchesContainer>
-            {results.matches.map((match, index) => (
-              <MatchCard key={index}>
-                <h3>{match.opportunity.name}</h3>
-                <p>Match Score: {match.match_score.toFixed(2)}</p>
-                <p>Project Type: {match.opportunity.project_type}</p>
-                <p>Location: {match.opportunity.location}</p>
+            <TabContainer>
+              {results.matches.map((match, index) => (
+                <TabButton
+                  key={index}
+                  active={activeTab === index}
+                  onClick={() => setActiveTab(index)}
+                >
+                  {match.opportunity.name}
+                </TabButton>
+              ))}
+            </TabContainer>
 
-                <Section>
-                  <SectionTitle>Description</SectionTitle>
-                  <p>{match.opportunity.description}</p>
-                </Section>
+            <MatchCard>
+              <h3>{results.matches[activeTab].opportunity.name}</h3>
+              <p>
+                Match Score:{" "}
+                {(results.matches[activeTab].match_score * 100).toFixed(2)}%
+              </p>
+              <p>
+                Project Type:{" "}
+                {results.matches[activeTab].opportunity.project_type}
+              </p>
+              <p>Location: {results.matches[activeTab].opportunity.location}</p>
 
-                <Section>
-                  <SectionTitle>SDGs</SectionTitle>
-                  <ul>
-                    {match.opportunity.sdgs.map((sdg, i) => (
-                      <ListItem key={i}>SDG {sdg}</ListItem>
-                    ))}
-                  </ul>
-                </Section>
+              <Section>
+                <SectionTitle>Description</SectionTitle>
+                <p>{results.matches[activeTab].opportunity.description}</p>
+              </Section>
 
-                <Section>
-                  <SectionTitle>Environmental Impact</SectionTitle>
-                  <p>{match.opportunity.environmental_impact}</p>
-                </Section>
+              <Section>
+                <SectionTitle>Short Match Summary</SectionTitle>
+                <p>{results.matches[activeTab].short_summary}</p>
+              </Section>
 
-                <Section>
-                  <SectionTitle>Social Impact</SectionTitle>
-                  <p>{match.opportunity.social_impact}</p>
-                </Section>
+              <Section>
+                <SectionTitle>Match Explanation</SectionTitle>
+                <MatchExplanation
+                  explanation={results.matches[activeTab].match_explanation}
+                />
+              </Section>
 
-                <Section>
-                  <SectionTitle>CO2 Reduction</SectionTitle>
-                  <p>Annual: {match.opportunity.annual_co2_reduction} tons</p>
-                  <p>Total: {match.opportunity.total_co2_reduction} tons</p>
-                </Section>
+              <Section>
+                <SectionTitle>SDGs</SectionTitle>
+                <ul>
+                  {results.matches[activeTab].opportunity.sdgs.map((sdg, i) => (
+                    <ListItem key={i}>SDG {sdg}</ListItem>
+                  ))}
+                </ul>
+              </Section>
 
-                <Section>
-                  <SectionTitle>Project Duration</SectionTitle>
-                  <p>{match.opportunity.project_duration} years</p>
-                </Section>
+              <Section>
+                <SectionTitle>Environmental Impact</SectionTitle>
+                <p>
+                  {results.matches[activeTab].opportunity.environmental_impact}
+                </p>
+              </Section>
 
-                <Section>
-                  <SectionTitle>Co-benefits</SectionTitle>
-                  <ul>
-                    {match.opportunity.co_benefits.map((benefit, i) => (
+              <Section>
+                <SectionTitle>Social Impact</SectionTitle>
+                <p>{results.matches[activeTab].opportunity.social_impact}</p>
+              </Section>
+
+              <Section>
+                <SectionTitle>CO2 Reduction</SectionTitle>
+                <p>
+                  Annual:{" "}
+                  {results.matches[activeTab].opportunity.annual_co2_reduction}{" "}
+                  tons
+                </p>
+                <p>
+                  Total:{" "}
+                  {results.matches[activeTab].opportunity.total_co2_reduction}{" "}
+                  tons
+                </p>
+              </Section>
+
+              <Section>
+                <SectionTitle>Project Duration</SectionTitle>
+                <p>
+                  {results.matches[activeTab].opportunity.project_duration}{" "}
+                  years
+                </p>
+              </Section>
+
+              <Section>
+                <SectionTitle>Co-benefits</SectionTitle>
+                <ul>
+                  {results.matches[activeTab].opportunity.co_benefits.map(
+                    (benefit, i) => (
                       <ListItem key={i}>{benefit}</ListItem>
-                    ))}
-                  </ul>
-                </Section>
+                    )
+                  )}
+                </ul>
+              </Section>
 
-                <Section>
-                  <SectionTitle>Technology Used</SectionTitle>
-                  <p>{match.opportunity.technology_used}</p>
-                </Section>
-
-                <Section>
-                  <SectionTitle>Match Explanation</SectionTitle>
-                  <p>{match.match_explanation}</p>
-                </Section>
-              </MatchCard>
-            ))}
+              <Section>
+                <SectionTitle>Technology Used</SectionTitle>
+                <p>{results.matches[activeTab].opportunity.technology_used}</p>
+              </Section>
+            </MatchCard>
           </MatchesContainer>
         </ResultsContainer>
       )}

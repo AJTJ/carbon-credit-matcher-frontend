@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/carbon-credit-matcher-frontend/static/css/main.e6c13ad2.css",
-    "main.js": "/carbon-credit-matcher-frontend/static/js/main.98437d5a.js",
+    "main.js": "/carbon-credit-matcher-frontend/static/js/main.4cd941ef.js",
     "static/js/453.99ec3f6b.chunk.js": "/carbon-credit-matcher-frontend/static/js/453.99ec3f6b.chunk.js",
     "index.html": "/carbon-credit-matcher-frontend/index.html",
     "main.e6c13ad2.css.map": "/carbon-credit-matcher-frontend/static/css/main.e6c13ad2.css.map",
-    "main.98437d5a.js.map": "/carbon-credit-matcher-frontend/static/js/main.98437d5a.js.map",
+    "main.4cd941ef.js.map": "/carbon-credit-matcher-frontend/static/js/main.4cd941ef.js.map",
     "453.99ec3f6b.chunk.js.map": "/carbon-credit-matcher-frontend/static/js/453.99ec3f6b.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.e6c13ad2.css",
-    "static/js/main.98437d5a.js"
+    "static/js/main.4cd941ef.js"
   ]
 }

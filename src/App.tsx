@@ -341,22 +341,31 @@ function App() {
         <SpinnerOverlay>
           <Spinner />
           <SpinnerText>
-            This is NOT optimized and may take a few minutes...
+            This is NOT optimized for production and may take a few
+            minutes...scroll down when it is done.
           </SpinnerText>
         </SpinnerOverlay>
       )}
       <h1>Carbon Credit Matcher</h1>
       <h4>
-        Note: This is a POC of using AI to match an ESG profile (inputed through
-        fields by the user) with a collection of carbon credit opportunities
-        with the goal of generating a "top 3" carbon offset project
-        opportunities. The AI model will generate matching explanations in the
-        form of a short summary and then longer explanations based on various
-        profile considerations. Scores will also be generated.
+        Note: This is a POC of using AI to match an ESG profile (received
+        through fields filled out by the user) with a collection of carbon
+        credit opportunities. The goal is to generate a "top 3" of potential
+        carbon offset project opportunities for this particular ESG profile.
       </h4>
       <h4>
-        The collection is a naive collection of three (3) opportunities taken
-        from a database of projects.
+        Based on semantic embeddings, the AI model will generate a short summary
+        for each match and then longer explanation based on different project
+        qualities. Scores will also be generated.
+      </h4>
+      <h4>
+        NOTE: For this POC the carbon credit opportunities are a naive
+        collection of three (3) opportunities, thus the chance of getting a good
+        match and match score is low. The three opportunities are taken from the
+        acr2.apx.com. Specifically:
+        https://acr2.apx.com/mymodule/reg/prjView.asp?id1=592,
+        https://acr2.apx.com/mymodule/reg/prjView.asp?id1=904, and
+        https://acr2.apx.com/mymodule/reg/prjView.asp?id1=586
       </h4>
       <DefaultDataButton onClick={fillDefaultData}>
         Fill with Example Data

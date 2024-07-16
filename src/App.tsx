@@ -304,27 +304,27 @@ function App() {
 
   const fillDefaultData = () => {
     setFormData({
-      company_name: "EcoTech Solutions",
-      industry: "Renewable Energies",
+      company_name: "GlobalTech Industries",
+      industry: "Manufacturing",
       description:
-        "EcoTech Solutions is a leading innovator in renewable energy technologies, focusing on solar and wind power solutions for urban environments.",
-      annual_emissions: 50000,
-      carbon_reduction_goal: 30,
+        "GlobalTech Industries is a major manufacturer committed to reducing its carbon footprint and achieving net-zero emissions through strategic carbon offset projects.",
+      annual_emissions: 150000,
+      carbon_reduction_goal: 40,
       preferred_project_types: [
-        "Solar Energy",
-        "Wind Energy",
+        "Reforestation",
+        "Renewable Energy",
         "Energy Efficiency",
       ],
-      preferred_locations: ["United States", "Europe"],
-      sdgs: [7, 9, 11, 13],
+      preferred_locations: ["Asia", "South America", "Africa"],
+      sdgs: [13, 12, 9, 7],
       environmental_focus:
-        "Reducing carbon emissions and promoting clean energy adoption in cities",
+        "Offsetting carbon emissions and supporting sustainable practices across the supply chain",
       social_focus:
-        "Creating green jobs and improving air quality in urban areas",
+        "Enhancing community resilience and supporting sustainable livelihoods",
       technology_interests: [
-        "Photovoltaic cells",
-        "Wind turbines",
-        "Smart grid technologies",
+        "Carbon capture and storage",
+        "Renewable energy technologies",
+        "Energy-efficient manufacturing processes",
       ],
     });
   };

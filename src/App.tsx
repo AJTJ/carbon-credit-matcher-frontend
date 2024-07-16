@@ -340,15 +340,23 @@ function App() {
       {isLoading && (
         <SpinnerOverlay>
           <Spinner />
-          <SpinnerText>This may take a few minutes...</SpinnerText>
+          <SpinnerText>
+            This is NOT optimized and may take a few minutes...
+          </SpinnerText>
         </SpinnerOverlay>
       )}
       <h1>Carbon Credit Matcher</h1>
       <h4>
         Note: This is a POC of using AI to match an ESG profile (inputed through
-        fields by the user) with a collection of carbon credit opportunities.
-        The collection is a naive collection of three opportunities taken from a
-        database of projects.
+        fields by the user) with a collection of carbon credit opportunities
+        with the goal of generating a "top 3" carbon offset project
+        opportunities. The AI model will generate matching explanations in the
+        form of a short summary and then longer explanations based on various
+        profile considerations. Scores will also be generated.
+      </h4>
+      <h4>
+        The collection is a naive collection of three (3) opportunities taken
+        from a database of projects.
       </h4>
       <DefaultDataButton onClick={fillDefaultData}>
         Fill with Example Data
@@ -375,10 +383,6 @@ function App() {
         <ResultsContainer>
           <SummaryContainer>
             <h3>Match Summary</h3>
-            <p>
-              These are the best 3 matches out of numerous opportunities in our
-              database.
-            </p>
             <p>
               Average Match Score:{" "}
               {(results.summary.average_score * 100).toFixed(2)}%
